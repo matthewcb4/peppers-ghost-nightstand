@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="theme-color" content="#000000">
   <meta name="description" content="Pepper's Ghost smart nightstand display with ambient video and floating clock HUD.">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <title>Ghost Display</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -642,6 +644,13 @@
           (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
         }
       });
+
+      /* ==============================================================
+         SERVICE WORKER REGISTRATION (PWA)
+         ============================================================== */
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
 
     })();
   </script>
