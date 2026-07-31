@@ -44,13 +44,14 @@
     * { scrollbar-width: none; }
 
     /* ================================================================
-       VIDEO CANVAS (Full-Bleed)
+       VIDEO CANVAS (Full-Bleed & Dimmer Support)
        ================================================================ */
     #video-canvas {
       position: fixed;
       inset: 0;
       z-index: 1;
       background: #000000;
+      transition: opacity 0.5s ease;
     }
 
     #video-canvas iframe {
@@ -72,7 +73,8 @@
       inset: 0;
       z-index: 10;
       pointer-events: none;
-      transform: scaleX(-1);        /* Mirror for 45° glass reflection */
+      transform: scaleX(-1) scaleY(1);        /* Default horizontal flip */
+      transition: opacity 0.5s ease;
     }
 
     /* ================================================================
@@ -83,7 +85,7 @@
       bottom: 6vh;
       left: 5vw;
       animation: pixel-shift 240s ease-in-out infinite alternate;
-      transition: color 1.2s ease, text-shadow 1.2s ease;
+      transition: color 1.2s ease, text-shadow 1.2s ease, opacity 0.5s ease;
     }
 
     #clock-time {
@@ -124,7 +126,7 @@
     }
 
     /* ================================================================
-       NIGHT MODE — Amber/Red tint (10 PM → 6 AM)
+       NIGHT MODE — Amber/Red tint (10 PM → 6 AM or Forced)
        ================================================================ */
     .night-mode #clock-time {
       color: rgba(255, 59, 48, 0.72);
@@ -153,7 +155,7 @@
       top: 3vh;
       right: 4vw;
       display: flex;
-      gap: 1.6em;
+      gap: 1.4em;
       font-size: clamp(0.55rem, 1.2vw, 0.75rem);
       font-weight: 400;
       letter-spacing: 0.15em;
@@ -178,6 +180,64 @@
       50%  { transform: translate(-4px, 5px); }
       75%  { transform: translate(3px, 2px); }
       100% { transform: translate(-5px, -4px); }
+    }
+
+    /* ================================================================
+       FLOATING QUICK CONTROL DOCK (Auto-hides after 5s)
+       ================================================================ */
+    #quick-dock {
+      position: fixed;
+      bottom: 2.5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.9rem;
+      background: rgba(18, 18, 18, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 40px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    #quick-dock.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dock-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      color: rgba(255, 255, 255, 0.75);
+      padding: 0.4rem 0.75rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 300;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .dock-btn:hover, .dock-btn.active {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    .dock-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
     }
 
     /* ================================================================
@@ -236,7 +296,7 @@
     }
 
     /* ================================================================
-       SETTINGS PANEL (hidden by default, revealed on triple-tap)
+       SETTINGS PANEL
        ================================================================ */
     #settings-panel {
       position: fixed;
@@ -244,79 +304,107 @@
       left: 0;
       right: 0;
       z-index: 50;
-      background: rgba(10, 10, 10, 0.95);
+      background: rgba(12, 12, 12, 0.95);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding: 1.5rem 2rem 2rem;
       transform: translateY(100%);
       transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: auto;
-      /* UN-mirror so controls read normally */
-      transform-origin: center center;
+      max-height: 80vh;
+      overflow-y: auto;
     }
 
     #settings-panel.open {
-      transform: translateY(0) scaleX(-1); /* scaleX(-1) counteracts the HUD mirror */
+      transform: translateY(0);
     }
 
     #settings-panel h3 {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 400;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 1rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 1.2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 0.4rem;
+    }
+
+    #settings-panel .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
     }
 
     #settings-panel .field {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.9rem;
+      flex-direction: column;
+      gap: 0.4rem;
     }
 
     #settings-panel label {
       font-size: 0.75rem;
       font-weight: 300;
-      color: rgba(255, 255, 255, 0.55);
-      min-width: 70px;
+      color: rgba(255, 255, 255, 0.6);
     }
 
-    #settings-panel input[type="text"] {
-      flex: 1;
+    #settings-panel input[type="text"], #settings-panel select {
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 6px;
-      padding: 0.5rem 0.7rem;
+      padding: 0.55rem 0.75rem;
       font-family: 'Outfit', sans-serif;
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.75);
+      color: rgba(255, 255, 255, 0.85);
       outline: none;
       transition: border-color 0.2s;
     }
 
-    #settings-panel input[type="text"]:focus {
-      border-color: rgba(255, 255, 255, 0.20);
+    #settings-panel select option {
+      background: #121212;
+      color: #fff;
+    }
+
+    #settings-panel input[type="range"] {
+      accent-color: #ffffff;
+      cursor: pointer;
+    }
+
+    .checkbox-group {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      margin-top: 0.2rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
     }
 
     #settings-panel .btn {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 6px;
-      padding: 0.45rem 1rem;
+      padding: 0.5rem 1.2rem;
       font-family: 'Outfit', sans-serif;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 400;
       letter-spacing: 0.1em;
-      color: rgba(255, 255, 255, 0.55);
+      color: rgba(255, 255, 255, 0.75);
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
     }
 
     #settings-panel .btn:hover {
-      background: rgba(255, 255, 255, 0.14);
-      color: rgba(255, 255, 255, 0.80);
+      background: rgba(255, 255, 255, 0.18);
+      color: rgba(255, 255, 255, 0.95);
     }
   </style>
 </head>
@@ -330,7 +418,7 @@
   </div>
 
   <!-- ============================================================
-       HUD OVERLAY (mirrored for Pepper's Ghost)
+       HUD OVERLAY (Pepper's Ghost mirrored)
        ============================================================ -->
   <div id="hud">
     <!-- Status Indicators -->
@@ -338,6 +426,7 @@
       <span id="ind-wake" class="indicator" title="Wake Lock">WAKE</span>
       <span id="ind-loop" class="indicator" title="Loop Active">LOOP</span>
       <span id="ind-night" class="indicator" title="Night Mode">NIGHT</span>
+      <span id="ind-sleep" class="indicator" title="Sleep Timer">SLEEP</span>
     </div>
 
     <!-- Clock -->
@@ -347,18 +436,74 @@
       </div>
       <div id="clock-date">Thursday, January 1</div>
     </div>
+  </div>
 
-    <!-- Settings (inside HUD so it's part of the mirrored layer) -->
-    <div id="settings-panel">
-      <h3>Playlist</h3>
+  <!-- ============================================================
+       FLOATING QUICK CONTROL DOCK (Auto-hides)
+       ============================================================ -->
+  <div id="quick-dock">
+    <button class="dock-btn" id="dock-play" title="Play / Pause">⏯ Pause</button>
+    <button class="dock-btn" id="dock-next" title="Next Video">⏭ Next</button>
+    <button class="dock-btn" id="dock-mute" title="Mute / Unmute">🔇 Muted</button>
+    <button class="dock-btn" id="dock-night" title="Night Mode">🌙 Auto</button>
+    <button class="dock-btn" id="dock-sleep" title="Sleep Timer">⏱ Sleep: Off</button>
+    <button class="dock-btn" id="dock-fliph" title="Flip Horizontal">↔ Flip H</button>
+    <button class="dock-btn" id="dock-flipv" title="Flip Vertical">↕ Flip V</button>
+    <button class="dock-btn" id="dock-settings" title="Settings">⚙ Settings</button>
+  </div>
+
+  <!-- ============================================================
+       SETTINGS PANEL
+       ============================================================ -->
+  <div id="settings-panel">
+    <h3>Nightstand & Optical Display Settings</h3>
+    <div class="grid">
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="input-playlist">YouTube Playlist Video IDs (comma-separated)</label>
+        <input type="text" id="input-playlist" placeholder="C8A_VNx81Ao, dQw4w9WgXcQ" spellcheck="false" autocomplete="off">
+      </div>
+
       <div class="field">
-        <label>Video IDs</label>
-        <input type="text" id="input-playlist" placeholder="dQw4w9WgXcQ, M7lc1UVf-VE" spellcheck="false" autocomplete="off">
+        <label for="input-dimmer">Display Dimmer / Brightness (<span id="dimmer-val">100</span>%)</label>
+        <input type="range" id="input-dimmer" min="10" max="100" value="100">
       </div>
-      <div class="field" style="justify-content: flex-end;">
-        <button class="btn" id="btn-apply">Apply</button>
-        <button class="btn" id="btn-close-settings">Close</button>
+
+      <div class="field">
+        <label for="select-night">Night Mode Color Scheme</label>
+        <select id="select-night">
+          <option value="auto">Auto (10 PM - 6 AM Amber/Red)</option>
+          <option value="on">Always Red (Night Mode)</option>
+          <option value="off">Always Normal (White Glow)</option>
+        </select>
       </div>
+
+      <div class="field">
+        <label for="select-sleep">Sleep Timer</label>
+        <select id="select-sleep">
+          <option value="0">Off</option>
+          <option value="15">15 Minutes</option>
+          <option value="30">30 Minutes</option>
+          <option value="45">45 Minutes</option>
+          <option value="60">60 Minutes</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Optical Mirroring</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-fliph" checked> Mirror Horizontal (scaleX -1)
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-flipv"> Mirror Vertical (scaleY -1)
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" style="flex-direction: row; justify-content: flex-end; gap: 0.8rem;">
+      <button class="btn" id="btn-apply">Save & Apply</button>
+      <button class="btn" id="btn-close-settings">Close</button>
     </div>
   </div>
 
@@ -373,7 +518,7 @@
   </div>
 
   <!-- ============================================================
-       YOUTUBE IFRAME API
+       YOUTUBE IFRAME API & APP ENGINE
        ============================================================ -->
   <script>
     const tag = document.createElement('script');
@@ -386,7 +531,7 @@
       'use strict';
 
       /* ==============================================================
-         CONFIG
+         CONFIG & DEFAULTS
          ============================================================== */
       const DEFAULT_PLAYLIST = ['C8A_VNx81Ao'];
       const NIGHT_START = 22; // 10 PM
@@ -394,19 +539,51 @@
       const CLOCK_TICK  = 1000;
 
       /* ==============================================================
-         STATE
+         SETTINGS STATE & PERSISTENCE
+         ============================================================== */
+      let settings = loadSettings();
+
+      function loadSettings() {
+        const defaults = {
+          playlist: [...DEFAULT_PLAYLIST],
+          brightness: 100,
+          nightMode: 'auto',
+          sleepMinutes: 0,
+          mirrorH: true,
+          mirrorV: false,
+          muted: true
+        };
+        try {
+          const stored = localStorage.getItem('ghost_display_settings');
+          if (stored) {
+            return { ...defaults, ...JSON.parse(stored) };
+          }
+        } catch (_) {}
+        return defaults;
+      }
+
+      function saveSettings() {
+        try {
+          localStorage.setItem('ghost_display_settings', JSON.stringify(settings));
+        } catch (_) {}
+      }
+
+      /* ==============================================================
+         GLOBAL RUNTIME STATE
          ============================================================== */
       let player       = null;
       let wakeLock     = null;
-      let playlist     = loadPlaylist();
       let currentIndex = 0;
       let isStarted    = false;
+      let sleepEndTime = null;
+      let dockTimeout  = null;
 
       /* ==============================================================
          DOM REFS
          ============================================================== */
       const $overlay     = document.getElementById('tap-overlay');
       const $hud         = document.getElementById('hud');
+      const $videoCanvas = document.getElementById('video-canvas');
       const $clockHM     = document.getElementById('clock-hm');
       const $clockSec    = document.getElementById('clock-seconds');
       const $clockAMPM   = document.getElementById('clock-ampm');
@@ -414,29 +591,49 @@
       const $indWake     = document.getElementById('ind-wake');
       const $indLoop     = document.getElementById('ind-loop');
       const $indNight    = document.getElementById('ind-night');
+      const $indSleep    = document.getElementById('ind-sleep');
+
+      const $dock        = document.getElementById('quick-dock');
+      const $dockPlay    = document.getElementById('dock-play');
+      const $dockNext    = document.getElementById('dock-next');
+      const $dockMute    = document.getElementById('dock-mute');
+      const $dockNight   = document.getElementById('dock-night');
+      const $dockSleep   = document.getElementById('dock-sleep');
+      const $dockFlipH   = document.getElementById('dock-fliph');
+      const $dockFlipV   = document.getElementById('dock-flipv');
+      const $dockSett    = document.getElementById('dock-settings');
+
       const $settings    = document.getElementById('settings-panel');
       const $inputPL     = document.getElementById('input-playlist');
+      const $inputDimmer = document.getElementById('input-dimmer');
+      const $dimmerVal   = document.getElementById('dimmer-val');
+      const $selectNight = document.getElementById('select-night');
+      const $selectSleep = document.getElementById('select-sleep');
+      const $chkFlipH    = document.getElementById('chk-fliph');
+      const $chkFlipV    = document.getElementById('chk-flipv');
       const $btnApply    = document.getElementById('btn-apply');
       const $btnClose    = document.getElementById('btn-close-settings');
 
       /* ==============================================================
-         PLAYLIST PERSISTENCE (localStorage)
+         MIRROR & BRIGHTNESS ENGINE
          ============================================================== */
-      function loadPlaylist() {
-        try {
-          const stored = localStorage.getItem('ghost_playlist');
-          if (stored) {
-            const arr = JSON.parse(stored);
-            if (Array.isArray(arr) && arr.length) return arr;
-          }
-        } catch (_) { /* ignore */ }
-        return [...DEFAULT_PLAYLIST];
+      function applyTransforms() {
+        const sx = settings.mirrorH ? -1 : 1;
+        const sy = settings.mirrorV ? -1 : 1;
+        $hud.style.transform = `scale(${sx}, ${sy})`;
+        $chkFlipH.checked = settings.mirrorH;
+        $chkFlipV.checked = settings.mirrorV;
       }
 
-      function savePlaylist(ids) {
-        playlist = ids;
-        localStorage.setItem('ghost_playlist', JSON.stringify(ids));
+      function applyBrightness() {
+        const opacity = settings.brightness / 100;
+        $videoCanvas.style.opacity = opacity;
+        $dimmerVal.textContent = settings.brightness;
+        $inputDimmer.value = settings.brightness;
       }
+
+      applyTransforms();
+      applyBrightness();
 
       /* ==============================================================
          YOUTUBE PLAYER
@@ -445,7 +642,7 @@
         player = new YT.Player('yt-player', {
           width: '100%',
           height: '100%',
-          videoId: playlist[0],
+          videoId: settings.playlist[0] || DEFAULT_PLAYLIST[0],
           playerVars: {
             autoplay: 0,
             controls: 0,
@@ -453,12 +650,12 @@
             enablejsapi: 1,
             fs: 0,
             iv_load_policy: 3,
-            loop: 0,               // We handle looping manually for playlists
+            loop: 0,
             modestbranding: 1,
             playsinline: 1,
             rel: 0,
             showinfo: 0,
-            mute: 1,
+            mute: settings.muted ? 1 : 0,
           },
           events: {
             onReady: onPlayerReady,
@@ -469,29 +666,28 @@
       };
 
       function onPlayerReady() {
-        player.mute();              // Ensure muted for autoplay policies
+        if (settings.muted) player.mute(); else player.unMute();
       }
 
       function onPlayerStateChange(e) {
         if (e.data === YT.PlayerState.ENDED) {
-          // Advance to next video, loop back to start
-          currentIndex = (currentIndex + 1) % playlist.length;
-          player.loadVideoById({
-            videoId: playlist[currentIndex],
-            startSeconds: 0,
-          });
+          currentIndex = (currentIndex + 1) % settings.playlist.length;
+          player.loadVideoById({ videoId: settings.playlist[currentIndex], startSeconds: 0 });
           $indLoop.classList.add('active');
         }
         if (e.data === YT.PlayerState.PLAYING) {
           $indLoop.classList.add('active');
+          $dockPlay.textContent = '⏯ Pause';
+        }
+        if (e.data === YT.PlayerState.PAUSED) {
+          $dockPlay.textContent = '⏯ Play';
         }
       }
 
       function onPlayerError() {
-        // Skip errored video after a short delay
         setTimeout(() => {
-          currentIndex = (currentIndex + 1) % playlist.length;
-          player.loadVideoById({ videoId: playlist[currentIndex], startSeconds: 0 });
+          currentIndex = (currentIndex + 1) % settings.playlist.length;
+          player.loadVideoById({ videoId: settings.playlist[currentIndex], startSeconds: 0 });
         }, 3000);
       }
 
@@ -509,7 +705,7 @@
         $overlay.classList.add('hidden');
         setTimeout(() => { $overlay.style.display = 'none'; }, 700);
 
-        // Request fullscreen on tap
+        // Native Fullscreen
         const el = document.documentElement;
         if (!document.fullscreenElement) {
           (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
@@ -520,18 +716,15 @@
           player.playVideo();
         }
 
-        // Acquire wake lock
         acquireWakeLock();
+        showDock();
       }
 
       /* ==============================================================
          SCREEN WAKE LOCK
          ============================================================== */
       async function acquireWakeLock() {
-        if (!('wakeLock' in navigator)) {
-          console.warn('Wake Lock API not supported');
-          return;
-        }
+        if (!('wakeLock' in navigator)) return;
         try {
           wakeLock = await navigator.wakeLock.request('screen');
           $indWake.classList.add('active');
@@ -539,12 +732,9 @@
             $indWake.classList.remove('active');
             wakeLock = null;
           });
-        } catch (err) {
-          console.warn('Wake Lock failed:', err);
-        }
+        } catch (_) {}
       }
 
-      // Re-acquire on visibility change (e.g., user switches back to tab)
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && isStarted && !wakeLock) {
           acquireWakeLock();
@@ -552,7 +742,7 @@
       });
 
       /* ==============================================================
-         CLOCK
+         CLOCK & NIGHT MODE
          ============================================================== */
       const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
       const MONTHS = ['January','February','March','April','May','June',
@@ -571,84 +761,224 @@
         $clockAMPM.textContent = ampm;
         $clockDate.textContent = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
-        // Night-mode check
-        const hour = now.getHours();
-        const isNight = hour >= NIGHT_START || hour < NIGHT_END;
+        // Night mode logic
+        let isNight = false;
+        if (settings.nightMode === 'on') {
+          isNight = true;
+        } else if (settings.nightMode === 'off') {
+          isNight = false;
+        } else {
+          const hour = now.getHours();
+          isNight = hour >= NIGHT_START || hour < NIGHT_END;
+        }
         document.body.classList.toggle('night-mode', isNight);
         $indNight.classList.toggle('active', isNight);
+
+        // Sleep timer tick
+        if (sleepEndTime) {
+          const remaining = Math.max(0, Math.ceil((sleepEndTime - now.getTime()) / 1000));
+          if (remaining > 0) {
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            $indSleep.textContent = mins > 0 ? `SLEEP ${mins}m` : `SLEEP ${secs}s`;
+            $indSleep.classList.add('active');
+          } else {
+            // Sleep timer finished -> fade out and pause
+            sleepEndTime = null;
+            $indSleep.textContent = 'SLEEP';
+            $indSleep.classList.remove('active');
+            settings.sleepMinutes = 0;
+            $selectSleep.value = 0;
+            $dockSleep.textContent = '⏱ Sleep: Off';
+            if (player && player.pauseVideo) player.pauseVideo();
+            $videoCanvas.style.opacity = 0;
+          }
+        }
       }
 
       updateClock();
       setInterval(updateClock, CLOCK_TICK);
 
       /* ==============================================================
-         SETTINGS PANEL — Triple-tap to open
+         DOCK INTERACTION & AUTO-HIDE
          ============================================================== */
-      let tapCount = 0;
-      let tapTimer = null;
+      function showDock() {
+        if (!isStarted) return;
+        $dock.classList.add('visible');
+        clearTimeout(dockTimeout);
+        dockTimeout = setTimeout(() => {
+          if (!$settings.classList.contains('open')) {
+            $dock.classList.remove('visible');
+          }
+        }, 5000);
+      }
 
-      document.addEventListener('click', (e) => {
-        // Ignore if overlay is showing or if clicking inside settings
+      document.addEventListener('pointerdown', (e) => {
         if (!isStarted) return;
         if ($settings.contains(e.target)) return;
-
-        tapCount++;
-        if (tapCount === 1) {
-          tapTimer = setTimeout(() => { tapCount = 0; }, 600);
-        }
-        if (tapCount >= 3) {
-          clearTimeout(tapTimer);
-          tapCount = 0;
-          toggleSettings();
-        }
+        showDock();
       });
 
+      /* ==============================================================
+         DOCK BUTTON ACTIONS
+         ============================================================== */
+      $dockPlay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!player) return;
+        const state = player.getPlayerState();
+        if (state === YT.PlayerState.PLAYING) {
+          player.pauseVideo();
+          $dockPlay.textContent = '⏯ Play';
+        } else {
+          player.playVideo();
+          $dockPlay.textContent = '⏯ Pause';
+        }
+        showDock();
+      });
+
+      $dockNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!player) return;
+        currentIndex = (currentIndex + 1) % settings.playlist.length;
+        player.loadVideoById({ videoId: settings.playlist[currentIndex], startSeconds: 0 });
+        showDock();
+      });
+
+      $dockMute.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!player) return;
+        if (player.isMuted()) {
+          player.unMute();
+          settings.muted = false;
+          $dockMute.textContent = '🔊 Audio';
+        } else {
+          player.mute();
+          settings.muted = true;
+          $dockMute.textContent = '🔇 Muted';
+        }
+        saveSettings();
+        showDock();
+      });
+
+      $dockNight.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const modes = ['auto', 'on', 'off'];
+        const next = modes[(modes.indexOf(settings.nightMode) + 1) % modes.length];
+        settings.nightMode = next;
+        $dockNight.textContent = `🌙 ${next.charAt(0).toUpperCase() + next.slice(1)}`;
+        saveSettings();
+        updateClock();
+        showDock();
+      });
+
+      $dockSleep.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const times = [0, 15, 30, 45, 60];
+        const next = times[(times.indexOf(settings.sleepMinutes) + 1) % times.length];
+        setSleepTimer(next);
+        showDock();
+      });
+
+      function setSleepTimer(mins) {
+        settings.sleepMinutes = mins;
+        $selectSleep.value = mins;
+        if (mins > 0) {
+          sleepEndTime = Date.now() + mins * 60 * 1000;
+          $dockSleep.textContent = `⏱ ${mins}m`;
+          $videoCanvas.style.opacity = settings.brightness / 100;
+        } else {
+          sleepEndTime = null;
+          $dockSleep.textContent = '⏱ Sleep: Off';
+          $indSleep.textContent = 'SLEEP';
+          $indSleep.classList.remove('active');
+        }
+        saveSettings();
+      }
+
+      $dockFlipH.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settings.mirrorH = !settings.mirrorH;
+        applyTransforms();
+        saveSettings();
+        showDock();
+      });
+
+      $dockFlipV.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settings.mirrorV = !settings.mirrorV;
+        applyTransforms();
+        saveSettings();
+        showDock();
+      });
+
+      $dockSett.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSettings();
+      });
+
+      /* ==============================================================
+         SETTINGS PANEL MANAGEMENT
+         ============================================================== */
       function toggleSettings() {
         const isOpen = $settings.classList.toggle('open');
         if (isOpen) {
-          $inputPL.value = playlist.join(', ');
-          $settings.style.pointerEvents = 'auto';
+          $inputPL.value = settings.playlist.join(', ');
+          $inputDimmer.value = settings.brightness;
+          $dimmerVal.textContent = settings.brightness;
+          $selectNight.value = settings.nightMode;
+          $selectSleep.value = settings.sleepMinutes;
+          $chkFlipH.checked = settings.mirrorH;
+          $chkFlipV.checked = settings.mirrorV;
+          $dock.classList.add('visible');
+          clearTimeout(dockTimeout);
         } else {
-          $settings.style.pointerEvents = 'none';
+          showDock();
         }
       }
+
+      $inputDimmer.addEventListener('input', (e) => {
+        settings.brightness = parseInt(e.target.value, 10);
+        applyBrightness();
+      });
+
+      $chkFlipH.addEventListener('change', (e) => {
+        settings.mirrorH = e.target.checked;
+        applyTransforms();
+      });
+
+      $chkFlipV.addEventListener('change', (e) => {
+        settings.mirrorV = e.target.checked;
+        applyTransforms();
+      });
 
       $btnClose.addEventListener('click', (e) => {
         e.stopPropagation();
         $settings.classList.remove('open');
+        showDock();
       });
 
       $btnApply.addEventListener('click', (e) => {
         e.stopPropagation();
         const raw = $inputPL.value;
         const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
-        if (ids.length === 0) return;
-
-        savePlaylist(ids);
-        currentIndex = 0;
-        if (player && player.loadVideoById) {
-          player.loadVideoById({ videoId: ids[0], startSeconds: 0 });
+        if (ids.length > 0) {
+          settings.playlist = ids;
+          currentIndex = 0;
+          if (player && player.loadVideoById) {
+            player.loadVideoById({ videoId: ids[0], startSeconds: 0 });
+          }
         }
+        settings.nightMode = $selectNight.value;
+        settings.brightness = parseInt($inputDimmer.value, 10);
+        setSleepTimer(parseInt($selectSleep.value, 10));
+
+        saveSettings();
+        applyTransforms();
+        applyBrightness();
+        updateClock();
+
         $settings.classList.remove('open');
-      });
-
-      /* ==============================================================
-         FULLSCREEN HELPER (double-tap for mobile)
-         ============================================================== */
-      let dblTimer = null;
-      let dblCount = 0;
-
-      document.addEventListener('dblclick', (e) => {
-        if (!isStarted) return;
-        if ($settings.classList.contains('open')) return;
-        e.preventDefault();
-
-        const el = document.documentElement;
-        if (!document.fullscreenElement) {
-          (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
-        } else {
-          (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
-        }
+        showDock();
       });
 
       /* ==============================================================
