@@ -533,7 +533,7 @@
       /* ==============================================================
          CONFIG & DEFAULTS
          ============================================================== */
-      const DEFAULT_PLAYLIST = ['C8A_VNx81Ao'];
+      const DEFAULT_PLAYLIST = ['C8A_VNx81Ao', 'KNcU3LvFq1Y', 'UxhTOBSrdwM'];
       const NIGHT_START = 22; // 10 PM
       const NIGHT_END   = 6;  // 6 AM
       const CLOCK_TICK  = 1000;
@@ -556,7 +556,11 @@
         try {
           const stored = localStorage.getItem('ghost_display_settings');
           if (stored) {
-            return { ...defaults, ...JSON.parse(stored) };
+            const parsed = JSON.parse(stored);
+            if (parsed.playlist && parsed.playlist.length === 1 && parsed.playlist[0] === 'C8A_VNx81Ao') {
+              parsed.playlist = [...DEFAULT_PLAYLIST];
+            }
+            return { ...defaults, ...parsed };
           }
         } catch (_) {}
         return defaults;
@@ -815,7 +819,17 @@
 
       document.addEventListener('pointerdown', (e) => {
         if (!isStarted) return;
-        if ($settings.contains(e.target)) return;
+        if ($settings.contains(e.target) || $dock.contains(e.target)) return;
+        
+        // Toggle play / pause on screen tap
+        if (player && player.getPlayerState) {
+          const state = player.getPlayerState();
+          if (state === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+          } else {
+            player.playVideo();
+          }
+        }
         showDock();
       });
 
