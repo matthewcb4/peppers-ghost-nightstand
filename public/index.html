@@ -509,6 +509,12 @@
         $overlay.classList.add('hidden');
         setTimeout(() => { $overlay.style.display = 'none'; }, 700);
 
+        // Request fullscreen on tap
+        const el = document.documentElement;
+        if (!document.fullscreenElement) {
+          (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+        }
+
         // Start playback
         if (player && player.playVideo) {
           player.playVideo();
