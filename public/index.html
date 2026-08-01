@@ -648,7 +648,7 @@
           height: '100%',
           videoId: settings.playlist[0] || DEFAULT_PLAYLIST[0],
           playerVars: {
-            autoplay: 0,
+            autoplay: 1,
             controls: 0,
             disablekb: 1,
             enablejsapi: 1,
@@ -671,15 +671,25 @@
 
       function onPlayerReady() {
         if (settings.muted) player.mute(); else player.unMute();
+        // Attempt instant autoplay
+        try { player.playVideo(); } catch (_) {}
       }
 
       function onPlayerStateChange(e) {
         if (e.data === YT.PlayerState.ENDED) {
           currentIndex = (currentIndex + 1) % settings.playlist.length;
-          player.loadVideoById({ videoId: settings.playlist[currentIndex], startSeconds: 0 });
+          const nextVideoId = settings.playlist[currentIndex];
+          player.loadVideoById({ videoId: nextVideoId, startSeconds: 0 });
+          setTimeout(() => { try { player.playVideo(); } catch (_) {} }, 200);
           $indLoop.classList.add('active');
         }
         if (e.data === YT.PlayerState.PLAYING) {
+          if (!isStarted) {
+            isStarted = true;
+            $overlay.classList.add('hidden');
+            setTimeout(() => { $overlay.style.display = 'none'; }, 700);
+            acquireWakeLock();
+          }
           $indLoop.classList.add('active');
           $dockPlay.textContent = '⏯ Pause';
         }
@@ -692,7 +702,8 @@
         setTimeout(() => {
           currentIndex = (currentIndex + 1) % settings.playlist.length;
           player.loadVideoById({ videoId: settings.playlist[currentIndex], startSeconds: 0 });
-        }, 3000);
+          setTimeout(() => { try { player.playVideo(); } catch (_) {} }, 200);
+        }, 2000);
       }
 
       /* ==============================================================
